@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuro-Focus | Visual Training</title>
+    <style>
+        :root {
+            --main-color: #6366f1;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: var(--card-bg);
+            max-width: 500px;
+            width: 90%;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .label {
+            color: var(--main-color);
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        h1 { font-size: 24px; margin-bottom: 20px; letter-spacing: -0.5px; }
+
+        #display-box {
+            background: #1e293b;
+            color: #ffffff;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 16px;
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 25px;
+            padding: 20px;
+            word-break: keep-all;
+            transition: all 0.3s;
+        }
+
+        .input-area { display: none; }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-align: center;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .btn {
+            background: var(--main-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn:hover { background: #4f46e5; }
+
+        /* 결과 알림 스타일 */
+        #feedback {
+            display: none;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        .correct { background: #ecfdf5; color: var(--success); border: 1px solid var(--success); }
+        .wrong { background: #fef2f2; color: var(--error); border: 1px solid var(--error); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="label">Visual Recall Test</div>
+    <h1>텍스트 잔상 퀴즈</h1>
+    
+    <div id="game-content">
+        <p id="guide" style="color:#64748b; margin-bottom: 25px; font-size: 15px;">짧게 나타나는 문장을 기억하고 질문에 답하세요.</p>
+        <div id="display-box">준비</div>
+        <div id="feedback"></div>
+
+        <div class="input-area" id="input-area">
+            <p id="question" style="font-weight: bold; margin-bottom: 15px;"></p>
+            <input type="text" id="user-answer" placeholder="정답 입력" autocomplete="off">
+            <button class="btn" id="submit-btn" onclick="checkAnswer()">확인</button>
+        </div>
+
+        <button id="start-btn" class="btn" onclick="startStage()">테스트 시작</button>
+    </div>
+</div>
+
+<script>
+    const stages = [
+        { text: "빨간색 가방을 든 남자가 편의점에 들어갔다.", q: "남자가 든 가방은 무슨 색이었나요?", a: "빨간색" },
+        { text: "책상 위에는 파란색 연필 3자루와 지우개가 있다.", q: "연필은 총 몇 자루였나요?", a: "3" },
+        { text: "어제 본 영화에서 주인공은 검은색 안경을 썼다.", q: "주인공의 안경 색깔은 무엇이었나요?", a: "검은색" }
+    ];
+
+    let currentStage = 0;
+    let score = 0;
+
+    function startStage() {
+        if (currentStage >= stages.length) {
+            finishGame();
+            return;
+        }
+
+        const displayBox = document.getElementById('display-box');
+        const feedback = document.getElementById('feedback');
+        const inputArea = document.getElementById('input-area');
+        const startBtn = document.getElementById('start-btn');
+
+        startBtn.style.display = 'none';
+        inputArea.style.display = 'none';
+        feedback.style.display = 'none';
+        
+        let count = 3;
+        displayBox.innerText = count;
+        let countdown = setInterval(() => {
+            count--;
+            if (count > 0) {
+                displayBox.innerText = count;
+            } else {
+                clearInterval(countdown);
+                showText();
+            }
+        }, 1000);
+    }
+
+    function showText() {
+        const displayBox = document.getElementById('display-box');
+        const stage = stages[currentStage];
+        displayBox.innerText = stage.text;
+        displayBox.style.background = "#4f46e5";
+
+        setTimeout(() => {
+            displayBox.innerText = "???";
+            displayBox.style.background = "#1e293b";
+            document.getElementById('input-area').style.display = 'block';
+            document.getElementById('question').innerText = stage.q;
+            document.getElementById('user-answer').value = "";
+            document.getElementById('user-answer').focus();
+        }, 700); 
+    }
+
+    function checkAnswer() {
+        const userAns = document.getElementById('user-answer').value.trim();
+        const stage = stages[currentStage];
+        const feedback = document.getElementById('feedback');
+        const inputArea = document.getElementById('input-area');
+
+        inputArea.style.display = 'none';
+        feedback.style.display = 'block';
+
+        if (userAns.includes(stage.a)) {
+            feedback.innerText = "✅ 정답입니다!";
+            feedback.className = "correct";
+            score++;
+        } else {
+            feedback.innerText = `❌ 틀렸습니다. (정답: ${stage.a})`;
+            feedback.className = "wrong";
+        }
+
+        // 1.5초 뒤에 다음 문제로 자동 이동
+        setTimeout(() => {
+            currentStage++;
+            startStage();
+        }, 1500);
+    }
+
+    function finishGame() {
+        const container = document.querySelector('.container');
+        container.innerHTML = `
+            <div class="label">Test Completed</div>
+            <h1>트레이닝 완료</h1>
+            <div style="font-size: 40px; font-weight: 800; color: var(--main-color); margin: 20px 0;">${score} / ${stages.length}</div>
+            <p style="color: #64748b; line-height: 1.6;">모든 응답 데이터가 기록되었습니다.</p>
+            <button class="btn" onclick="location.reload()" style="background:#f1f5f9; color:#64748b; margin-top:25px;">다시 시도</button>
+        `;
+    }
+</script>
+
+</body>
+</html>
